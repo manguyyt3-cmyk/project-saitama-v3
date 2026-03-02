@@ -217,8 +217,22 @@ function showResults() {
 
   spinWheel(() => {
     const existing = loadToday()
-    const forceNew = existing && existing.completed
-    if (forceNew) localStorage.removeItem("todayWorkout")
+    const allComplete = existing && existing.completed
+    const allZero = existing && exercises.every(ex => existing.done[ex] === 0)
+    const forceNew = allComplete
+
+    if (forceNew) {
+      // Completed workout — regenerate goals and wipe counts
+      localStorage.removeItem("todayWorkout")
+    } else if (allZero) {
+      // All at zero — just regenerate goals, keep counts at 0
+      exercises.forEach(ex => {
+        existing.goals[ex] = generateReps(ex, null)
+      })
+      existing.completed = false
+      saveToday(existing)
+    }
+
     const today = generateWorkout(forceNew)
     const div = document.getElementById("results")
 
