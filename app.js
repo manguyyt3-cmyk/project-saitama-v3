@@ -20,12 +20,25 @@ function yesterdayString() {
 
 // ─── Rep Generator ────────────────────────────────────────────────────────────
 
-function generateReps() {
-  const min = 50
-  const max = 200
+function generateReps(exercise, prevGoal) {
+  const roll = Math.random()
   const step = Math.random() < 0.5 ? 5 : 10
-  const raw = Math.random() * (max - min) + min
-  return Math.round(raw / step) * step
+  const hardMax = exercise === "pushups" ? 170 : 150
+  // If yesterday was over 100, cap today at 120
+  const max = (prevGoal && prevGoal > 100) ? Math.min(120, hardMax) : hardMax
+
+  if (roll < 0.60) {
+    // 60%: exactly 100
+    return 100
+  } else if (roll < 0.90) {
+    // 30%: above 100, up to max
+    const raw = 100 + Math.random() * (max - 100)
+    return Math.min(max, Math.round(raw / step) * step)
+  } else {
+    // 10%: below 100, down to 50
+    const raw = 50 + Math.random() * 50
+    return Math.max(50, Math.round(raw / step) * step)
+  }
 }
 
 // ─── Storage ─────────────────────────────────────────────────────────────────
@@ -55,6 +68,17 @@ function saveToday(data) {
   localStorage.setItem("todayWorkout", JSON.stringify(data))
 }
 
+function loadYesterday() {
+  return JSON.parse(localStorage.getItem("yesterdayWorkout"))
+}
+
+function archiveToday() {
+  const today = loadToday()
+  if (today && today.date === yesterdayString()) {
+    localStorage.setItem("yesterdayWorkout", JSON.stringify(today))
+  }
+}
+
 // ─── Streak Logic ─────────────────────────────────────────────────────────────
 // Rules:
 //   • Completing a workout OR logging a rest day counts as "active"
@@ -77,6 +101,10 @@ function generateWorkout() {
   let today = loadToday()
   if (today && today.date === todayString()) return today
 
+  // Archive the previous day before generating a new one
+  archiveToday()
+  const yesterday = loadYesterday()
+
   today = {
     date: todayString(),
     goals: {},
@@ -86,7 +114,8 @@ function generateWorkout() {
   }
 
   exercises.forEach(ex => {
-    today.goals[ex] = generateReps()
+    const prevGoal = yesterday ? yesterday.goals[ex] : null
+    today.goals[ex] = generateReps(ex, prevGoal)
     today.done[ex] = 0
   })
 
