@@ -2,20 +2,28 @@ const exercises = ["pushups", "situps", "squats"]
 
 // ─── Date Helpers ────────────────────────────────────────────────────────────
 
+function localDateString(date = new Date()) {
+  // Use local calendar date, not UTC — so midnight means midnight on the device
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
 function todayString() {
-  return new Date().toISOString().split("T")[0]
+  return localDateString()
+}
+
+function yesterdayString() {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  return localDateString(d)
 }
 
 function daysBetween(dateStr1, dateStr2) {
   const d1 = new Date(dateStr1)
   const d2 = new Date(dateStr2)
   return Math.round(Math.abs((d2 - d1) / (1000 * 60 * 60 * 24)))
-}
-
-function yesterdayString() {
-  const d = new Date()
-  d.setDate(d.getDate() - 1)
-  return d.toISOString().split("T")[0]
 }
 
 // ─── Rep Generator ────────────────────────────────────────────────────────────
