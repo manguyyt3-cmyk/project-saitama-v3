@@ -21,9 +21,12 @@ function yesterdayString() {
 }
 
 function daysBetween(dateStr1, dateStr2) {
-  const d1 = new Date(dateStr1)
-  const d2 = new Date(dateStr2)
-  return Math.round(Math.abs((d2 - d1) / (1000 * 60 * 60 * 24)))
+  // Parse as local midnight to avoid UTC offset skewing the day count
+  const [y1, m1, d1] = dateStr1.split("-").map(Number)
+  const [y2, m2, d2] = dateStr2.split("-").map(Number)
+  const a = new Date(y1, m1 - 1, d1)
+  const b = new Date(y2, m2 - 1, d2)
+  return Math.round(Math.abs((b - a) / (1000 * 60 * 60 * 24)))
 }
 
 // ─── Rep Generator ────────────────────────────────────────────────────────────
@@ -82,7 +85,8 @@ function loadYesterday() {
 
 function archiveToday() {
   const today = loadToday()
-  if (today && today.date === yesterdayString()) {
+  // Archive any stored workout that isn't from today (regardless of how old)
+  if (today && today.date !== todayString()) {
     localStorage.setItem("yesterdayWorkout", JSON.stringify(today))
   }
 }
